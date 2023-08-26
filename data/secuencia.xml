@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <data>
+    
+        <record id="sequence_comprobantes" model="ir.sequence">
+            <field name="name">comprobantes Sequence</field>
+            <field name="code">comprobantes.comprobantes.sequence</field>
+            <field name="prefix">B12</field>
+            <field name="padding">8</field>
+        </record>
+    
+    </data>
+    
+
+</odoo>
