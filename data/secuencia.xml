@@ -3,10 +3,17 @@
 
     <data>
     
-        <record id="sequence_comprobantes" model="ir.sequence">
+        <record id="sequence_consumidor_final" model="ir.sequence">
             <field name="name">comprobantes Sequence</field>
-            <field name="code">comprobantes.comprobantes.sequence</field>
-            <field name="prefix">B12</field>
+            <field name="code">dominican.fiscal.sequence.consumidor.final</field>
+            <field name="prefix">B01</field>
+            <field name="padding">8</field>
+        </record>
+        
+        <record id="sequence_credito_fiscal" model="ir.sequence">
+            <field name="name">comprobantes Sequence</field>
+            <field name="code">dominican.fiscal.sequence.credito.fiscal</field>
+            <field name="prefix">B02</field>
             <field name="padding">8</field>
         </record>
     
@@ -14,3 +21,4 @@
     
 
 </odoo>
+

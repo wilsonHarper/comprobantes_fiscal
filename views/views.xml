@@ -1,56 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
   <data>
-    <!-- explicit list view definition -->
-    <record model="ir.ui.view" id="comprobantes.list">
-      <field name="name">comprobantes list</field>
-      <field name="model">comprobantes.comprobantes</field>
-      <field name="arch" type="xml">
-        <tree>
-          <field name="tipo"/>
-          <field name="prefijo"/>
-          <field name="numero_comprobante"/>
-          
-        </tree>
-      </field>
-    </record>
+        <!-- explicit list view definition -->
+        <record id="comprobantes_tree" model="ir.ui.view">
+            <field name="name">comprobantes.tree</field>
+            <field name="model">comprobantes.comprobantes</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="tipo_comprobante"/>
+                    <field name="numero_comprobante"/>
+                </tree>
+            </field>
+        </record>
+
+            <!-- actions opening views on models -->
+
+            <record id="comprobantes_action" model="ir.actions.act_window">
+            <field name="name">comprobantes.action</field>
+            <field name="res_model">comprobantes.comprobantes</field>
+            <field name="view_mode">tree,form</field>
+            </record>
 
 
-    <!-- actions opening views on models -->
+            <!-- server action to the one above -->
+        <!--
+            <record model="ir.actions.server" id="comprobantes.action_server">
+            <field name="name">comprobantes server</field>
+            <field name="model_id" ref="model_comprobantes_comprobantes"/>
+            <field name="state">code</field>
+            <field name="code">
+                action = {
+                "type": "ir.actions.act_window",
+                "view_mode": "tree,form",
+                "res_model": model._name,
+                }
+            </field>
+            </record>
+        -->
 
-    <record model="ir.actions.act_window" id="comprobantes.action_window">
-      <field name="name">comprobantes window</field>
-      <field name="res_model">comprobantes.comprobantes</field>
-      <field name="view_mode">tree,form</field>
-    </record>
+            <!-- Top menu item -->
+            <menuitem name="comprobantes" id="comprobantes_menu"/>
 
+            <!-- menu categories -->
 
-    <!-- server action to the one above -->
-<!--
-    <record model="ir.actions.server" id="comprobantes.action_server">
-      <field name="name">comprobantes server</field>
-      <field name="model_id" ref="model_comprobantes_comprobantes"/>
-      <field name="state">code</field>
-      <field name="code">
-        action = {
-          "type": "ir.actions.act_window",
-          "view_mode": "tree,form",
-          "res_model": model._name,
-        }
-      </field>
-    </record>
--->
+            <menuitem name="Menu 1" id="comprobantes_menu_1" parent="comprobantes_menu"/>
 
-    <!-- Top menu item -->
-    <menuitem name="comprobantes" id="comprobantes.menu_root"/>
+            <!-- actions -->
 
-    <!-- menu categories -->
-
-    <menuitem name="Menu 1" id="comprobantes.menu_1" parent="comprobantes.menu_root"/>
-
-    <!-- actions -->
-
-    <menuitem name="List" id="comprobantes.menu_1_list" parent="comprobantes.menu_1"
-              action="comprobantes.action_window"/>
-    
+            <menuitem name="List" id="comprobantes_menu1" parent="comprobantes_menu_1"
+                    action="comprobantes_action"/>
+            
   </data>
 </odoo>
