@@ -8,8 +8,35 @@
             <field name="arch" type="xml">
                 <tree>
                     <field name="tipo_comprobante"/>
-                    <field name="numero_comprobante"/>
+                    <field name="numero_comprobante" attrs="{'invisible': ['|', ('numero_comprobante', '=', 'B01'), ('numero_comprobante', '=', 'B02')]}"/>
                 </tree>
+            </field>
+        </record>
+
+
+            <!--Vista formulario para generar los comprobantes -->
+        <record id="view_comprobantes_form" model="ir.ui.view">
+            <field name="name">comprobantes.form</field>
+            <field name="model">comprobantes.comprobantes</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="tipo_comprobante"/>
+                                <field name="num_to_generate"/>
+                            </group>
+                            <group>
+                                <field name="numero_comprobante"/>
+                                <button string="Generar Comprobantes" type="object" name="generate_comprobantes" class="oe_highlight" />
+                            </group>
+                        </group>
+                        <footer>
+                            <button string="Guardar" class="btn-primary" special="save"/>
+                            <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                        </footer>
+                    </sheet>
+                </form>
             </field>
         </record>
 
