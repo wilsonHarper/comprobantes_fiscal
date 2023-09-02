@@ -26,6 +26,7 @@ class comprobantes(models.Model):
     state = fields.Selection([
         ('disponible', 'Disponible'),
         ('asociado', 'Asociado'),
+        ('vencido', 'Vencido'),
     ], string='Estado', default='disponible', readonly=True)
     
    
@@ -43,9 +44,12 @@ class comprobantes(models.Model):
     #======= inicio tiempo para vebcer los comprobantes=======#
     @api.depends('fecha_emision')
     def _compute_fecha_vencimiento(self):
+        today = fields.Date.today()
         for record in self:
             if record.fecha_emision:
                 record.fecha_vencimiento = record.fecha_emision + timedelta(days=1)
+                if record.fecha_vencimiento > today and record.state != 'vencido':
+                    record.state = 'vencido'
 
     # Crear el nuemro de acuerdo al tipo de compro vante validado
     def generate_comprobantes(self):
