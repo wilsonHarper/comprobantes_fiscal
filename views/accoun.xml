@@ -10,7 +10,7 @@
                     <field name="tipo_comprobante"/>
                     <field name="numero_comprobante_asignado"/>
                 </xpath>
-        </field>
-</record>
+            </field>
+        </record>
     </data>
 </odoo>

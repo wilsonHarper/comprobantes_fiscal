@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api
-from datetime import datetime, timedelta
 
+from odoo import models, fields, api
+from odoo.exceptions import UserError
+from datetime import datetime, timedelta
 
 class comprobantes(models.Model):
     _name = 'comprobantes.comprobantes'
@@ -22,36 +23,40 @@ class comprobantes(models.Model):
     #tipo = fields.Selection(TIPO_COMPROBANTE, string='Tipo de Comprobante', required=True, default='consumidor')
     sequence_id = fields.Many2one('ir.sequence', string='Secuencia', readonly=True)
     fecha_emision = fields.Date(string='Fecha de Emisión', default=fields.Date.context_today)
-    fecha_vencimiento = fields.Date(string='Fecha de Vencimiento', compute='_compute_fecha_vencimiento')
+    fecha_vencimiento = fields.Date(string='Fecha de Vencimiento')
     state = fields.Selection([
         ('disponible', 'Disponible'),
         ('asociado', 'Asociado'),
         ('vencido', 'Vencido'),
-    ], string='Estado', default='disponible', readonly=True)
+    ], string='Estado', default='disponible', readonly=True, compute='_compute_estado', store=True)
     
-   
+    factura_ids = fields.One2many('account.move', 'comprobante_id', string='Facturas Asociadas')
 
     #================    Find campos comprobante y asociacion de factura     ======================================#
 
     @api.onchange('tipo_comprobante')
     def _onchange_comprobante_type(self):
-        if self.tipo_comprobante == 'consumidor':
-            self.sequence_id = self.env.ref('comprobantes_fiscal.sequence_consumidor_final')
-        elif self.tipo_comprobante == 'credito_fiscal':
-            self.sequence_id = self.env.ref('comprobantes_fiscal.sequence_credito_fiscal')
+        try:
+            if self.tipo_comprobante == 'consumidor':
+                self.sequence_id = self.env.ref('comprobantes_fiscal.sequence_consumidor_final')
+            elif self.tipo_comprobante == 'credito_fiscal':
+                self.sequence_id = self.env.ref('comprobantes_fiscal.sequence_credito_fiscal')
+        except ValueError:
+            self.sequence_id = None
 
 
     #======= inicio tiempo para vebcer los comprobantes=======#
-    @api.depends('fecha_emision')
-    def _compute_fecha_vencimiento(self):
-        today = fields.Date.today()
+   
+    @api.depends('fecha_vencimiento')
+    def _compute_estado(self):
         for record in self:
-            if record.fecha_emision:
-                record.fecha_vencimiento = record.fecha_emision + timedelta(days=1)
-                if record.fecha_vencimiento > today and record.state != 'vencido':
+            if record.fecha_vencimiento:
+                today = fields.Date.today()
+                if record.fecha_vencimiento < today:
                     record.state = 'vencido'
 
-    # Crear el nuemro de acuerdo al tipo de compro vante validado
+
+     #===== Crear el nuemro de acuerdo al tipo de comprobante validado ==========#
     def generate_comprobantes(self):
         for record in self:
             if record.num_to_generate >= 1:
@@ -66,8 +71,14 @@ class comprobantes(models.Model):
                         'numero_comprobante': next_number,
                         'tipo_comprobante': record.tipo_comprobante,
                         'fecha_emision': record.fecha_emision,
+                        'fecha_vencimiento': record.fecha_vencimiento, 
                     })
                 self.env['comprobantes.comprobantes'].create(comprobantes)
+
+                 # Limpia los campos en la vista luego de generar los comprobantes
+            record.write({
+                'num_to_generate': 0,   
+            })
         
     # Vlidar el tipo de comprobante y general un numero de acuerdo al tipo 
     @api.depends('numero_comprobante')
@@ -81,6 +92,13 @@ class comprobantes(models.Model):
             else:
                 record.validation_result = False
 
+    def unlink(self):
+        # Verifica si hay facturas asociadas al comprobante
+        for comprobante in self:
+            if comprobante.factura_ids:
+                raise UserError('No se puede borrar el comprobante porque está asociado a una factura.')
+        return super(comprobantes, self).unlink()
+
     #<----------Inicio del codigo para asocial un comprobante de la lista a la factura-------------->#
 class MiFactura(models.Model):
     _inherit = 'account.move'
@@ -90,7 +108,7 @@ class MiFactura(models.Model):
         ('credito_fiscal', 'Credito Fiscal'),
     ], string='Tipo de Comprobante')
 
-    numero_comprobante_asignado = fields.Char(string='Número comprobante asignado', readonly=True)
+    numero_comprobante_asignado = fields.Char(string='Número de Comprobante', readonly=True)
     comprobante_id = fields.Many2one('comprobantes.comprobantes', string='Comprobante Asignado')
 
 
@@ -102,7 +120,7 @@ class MiFactura(models.Model):
                 ('tipo_comprobante', '=', self.tipo_comprobante),
                 ('numero_comprobante', '!=', False),
                 ('state', '=', 'disponible'),
-            ], order='create_date', limit=1)
+            ], order='create_date desc', limit=1)
             if comprobante:
                 self.numero_comprobante_asignado = comprobante.numero_comprobante
                 self.comprobante_id = comprobante
@@ -119,7 +137,7 @@ class MiFactura(models.Model):
                 ('tipo_comprobante', '=', vals['tipo_comprobante']),
                 ('numero_comprobante', '!=', False),
                 ('state', '=', 'disponible'),
-            ], order='create_date', limit=1)
+            ], order='create_date desc', limit=1)
             if comprobante:
                 vals['numero_comprobante_asignado'] = comprobante.numero_comprobante
                 vals['comprobante_id'] = comprobante.id
@@ -133,5 +151,4 @@ class MiFactura(models.Model):
                 comprobante = factura.comprobante_id
                 comprobante.write({'state': 'disponible'})
             super(MiFactura, factura).unlink()
-    
     
